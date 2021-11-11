@@ -89,9 +89,16 @@ RSpec.describe Topteam do
     end
 
     describe "#add_game" do
-      it "parses a game string into a game object" do
+      xit "parses a game string into a game object" do
         subject.add_game(input[0])
         expect(subject.games).to be_an_instance_of(Topteam::Game)
+      end
+      it "produces the rankings" do
+        games = input.map{|v| Topteam::Game.parse_game(v)}
+        season = Topteam::Season.new(games)
+        season.process_games
+
+        expect(season.rankings).to eq ""
       end
     end
   end
