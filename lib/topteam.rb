@@ -43,11 +43,20 @@ module Topteam
     def initialize(games)
       @games = games
       @teams = {}
+      @matches_per_day = @teams.count / 2
       @rankings = []
+    end
+
+    def by_top_three_teams
+      @rankings.map{|match_day| match_day[0..2]}
     end
 
     def teams_array
       @teams.values
+    end
+
+    def match_day_complete?
+      teams_array.map(&:matches_played).uniq.length == 1
     end
 
     def teams; end
@@ -82,8 +91,12 @@ module Topteam
           team1.tie!
           team2.tie!
         end
-        if @teams.values.map(&:matches_played).uniq.length == 1 && ((team_names & @games[index + 1].team_names).length > 0)
-          @rankings << @teams.values.sort_by(&:score).map { |team| [team.name, team.score] }
+        unless @games[index + 1]
+          @rankings << teams_array.sort_by{|t| [-t.score, -t.name]}.map { |team| [team.name, team.score] }
+          return @rankings
+        end
+        if match_day_complete? && (team_names.intersection(@games[index + 1].team_names).any?)
+          @rankings << teams_array.sort_by{|t| [-t.score, -t.name]}.map { |team| [team.name, team.score] }
         end
       end
     end
@@ -97,6 +110,7 @@ module Topteam
     attr_accessor :match_day
     attr_reader :team1, :team2
 
+    # input line by line
     def self.parse_game(game_string)
       team_scores = game_string.split(", ").map { |ts| parse_team_score(ts) }
       new(*team_scores)

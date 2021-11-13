@@ -72,7 +72,7 @@ RSpec.describe Topteam do
   end
 
   describe Topteam::Season do
-    subject { Topteam::Season.new }
+    # subject { Topteam::Season.new }
     let(:input) do
       ["San Jose Earthquakes 3, Santa Cruz Slugs 3",
        "Capitola Seahorses 1, Aptos FC 0",
@@ -88,17 +88,45 @@ RSpec.describe Topteam do
        "Santa Cruz Slugs 1, Felton Lumberjacks 1"]
     end
 
+    let(:one_day) {
+      input[0..2]
+    }
+
+    let(:one_day_output) {
+
+    }
+
+    let(:two_days) {
+      input[0..5]
+    }
+
+    let(:three_days) {
+      input[0..8]
+    }
+
+    let(:four_days) {
+      input[0..11]
+    }
+
+    subject {
+      ->(input) {
+        games = input.map { |v| Topteam::Game.parse_game(v) }
+        season = Topteam::Season.new(games)
+        season.process_games
+        season.rankings
+      }
+    }
+
     describe "#add_game" do
       xit "parses a game string into a game object" do
         subject.add_game(input[0])
         expect(subject.games).to be_an_instance_of(Topteam::Game)
       end
-      it "produces the rankings" do
-        games = input.map{|v| Topteam::Game.parse_game(v)}
-        season = Topteam::Season.new(games)
-        season.process_games
-
-        expect(season.rankings).to eq ""
+      it "produces the proper rankings after one day" do
+        expect(subject.(one_day)).to eq ""
+      end
+      it "produces the proper rankings after two days" do
+        expect(subject.(two_days)).to eq ""
       end
     end
   end
