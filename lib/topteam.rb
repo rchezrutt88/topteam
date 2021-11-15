@@ -38,28 +38,30 @@ module Topteam
   end
 
   class Season
-    attr_reader :rankings
+    attr_reader :rankings, :teams
 
     def initialize(games)
       @games = games
-      @teams = {}
-      @matches_per_day = @teams.count / 2
+      @teams = @games.map(&:team_names).flatten.uniq.map { |team_name| Team.new(team_name) }
+      @matches_per_day = @teams.length / 2
       @rankings = []
     end
 
     def by_top_three_teams
-      @rankings.map{|match_day| match_day[0..2]}
+      @rankings.map { |match_day| match_day[0..2] }
     end
 
-    def teams_array
-      @teams.values
+    def teams_hash
+      @teams_hash ||= @teams.each_with_object({}) { |team, hash| hash[team.name] = team }
+    end
+
+    def teams_tuples
+      @teams.map { |team| [team.name, team.score] }
     end
 
     def match_day_complete?
       teams_array.map(&:matches_played).uniq.length == 1
     end
-
-    def teams; end
 
     def team_names
       @teams.values.map(&:name)
@@ -69,43 +71,58 @@ module Topteam
 
     # TODO: consider overriding <<
 
+    # enumerator?
     def process_games
-      @games.each_with_index do |game, index|
-        team1 = if @teams[game.team1.name]
-                  @teams[game.team1.name]
-                else
-                  @teams[game.team1.name] = Team.new(game.team1.name)
-                end
-        # team1 = @teams[game.team1.name] || @teams[game.team1.name] = Team.new(game.team1.name)
-        # team2 = @teams[game.team2.name] || @teams[game.team2.name] = Team.new(game.team2.name)
-        team2 = if @teams[game.team2.name]
-                  @teams[game.team2.name]
-                else
-                  @teams[game.team2.name] = Team.new(game.team2.name)
-                end
-
-        if game.team1.score > game.team2.score
-          team1.win!
-          team2.loss!
-        else
-          team1.tie!
-          team2.tie!
-        end
-        unless @games[index + 1]
-          @rankings << teams_array.sort_by{|t| [-t.score, -t.name]}.map { |team| [team.name, team.score] }
-          return @rankings
-        end
-        if match_day_complete? && (team_names.intersection(@games[index + 1].team_names).any?)
-          @rankings << teams_array.sort_by{|t| [-t.score, -t.name]}.map { |team| [team.name, team.score] }
+      @games.each do |game|
+        case game.team1.score <=> game.team2.score
+        when 1
+          teams_hash[game.team1.name].win!
+          teams_hash[game.team2.name].loss!
+        when 0
+          teams_hash[game.team1.name].tie!
+          teams_hash[game.team2.name].tie!
+        when -1
+          teams_hash[game.team2.name].win!
+          teams_hash[game.team1.name].loss!
         end
       end
+      self
+
+      # @games.each_with_index do |game, index|
+      #   team1 = if @teams[game.team1.name]
+      #             @teams[game.team1.name]
+      #           else
+      #             @teams[game.team1.name] = Team.new(game.team1.name)
+      #           end
+      #   # team1 = @teams[game.team1.name] || @teams[game.team1.name] = Team.new(game.team1.name)
+      #   # team2 = @teams[game.team2.name] || @teams[game.team2.name] = Team.new(game.team2.name)
+      #   team2 = if @teams[game.team2.name]
+      #             @teams[game.team2.name]
+      #           else
+      #             @teams[game.team2.name] = Team.new(game.team2.name)
+      #           end
+      #
+      #   if game.team1.score > game.team2.score
+      #     team1.win!
+      #     team2.loss!
+      #   else
+      #     team1.tie!
+      #     team2.tie!
+      #   end
+      #   unless @games[index + 1]
+      #     @rankings << teams_array.sort_by { |t| [-t.score, -t.name] }.map { |team| [team.name, team.score] }
+      #     return @rankings
+      #   end
+      #   if match_day_complete? && team_names.intersection(@games[index + 1].team_names).any?
+      #     @rankings << teams_array.sort_by { |t| [-t.score, -t.name] }.map { |team| [team.name, team.score] }
+      #   end
+      # end
     end
 
     #  if next game results in one teams matches played being one greater than the others
   end
 
   class Game
-
     TeamScore = Struct.new(:name, :score)
     attr_accessor :match_day
     attr_reader :team1, :team2
@@ -130,7 +147,7 @@ module Topteam
     def winner
       return if tie?
 
-      [@team1, @team2].max_by { |t| t.score }.name
+      [@team1, @team2].max_by(&:score).name
     end
 
     def tie?

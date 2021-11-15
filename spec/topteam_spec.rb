@@ -72,62 +72,123 @@ RSpec.describe Topteam do
   end
 
   describe Topteam::Season do
-    # subject { Topteam::Season.new }
-    let(:input) do
+    subject(:season) do
+      lambda { |input|
+        games = input.map { |v| Topteam::Game.parse_game(v) }
+        Topteam::Season.new(games)
+      }
+    end
+
+    let(:raw_teams_array) do
       ["San Jose Earthquakes 3, Santa Cruz Slugs 3",
        "Capitola Seahorses 1, Aptos FC 0",
        "Felton Lumberjacks 2, Monterey United 0",
+
        "Felton Lumberjacks 1, Aptos FC 2",
        "Santa Cruz Slugs 0, Capitola Seahorses 0",
        "Monterey United 4, San Jose Earthquakes 2",
+
        "Santa Cruz Slugs 2, Aptos FC 3",
        "San Jose Earthquakes 1, Felton Lumberjacks 4",
        "Monterey United 1, Capitola Seahorses 0",
+
        "Aptos FC 2, Monterey United 0",
        "Capitola Seahorses 5, San Jose Earthquakes 5",
        "Santa Cruz Slugs 1, Felton Lumberjacks 1"]
     end
 
-    let(:one_day) {
-      input[0..2]
-    }
+    let(:expected_teams) do
+      [
+        "San Jose Earthquakes",
+        "Santa Cruz Slugs",
+        "Capitola Seahorses",
+        "Aptos FC",
+        "Felton Lumberjacks",
+        "Monterey United"
+      ]
+    end
 
-    let(:one_day_output) {
+    let(:one_day) do
+      raw_teams_array[0..2]
+    end
 
-    }
+    let(:two_days) do
+      raw_teams_array[0..5]
+    end
 
-    let(:two_days) {
-      input[0..5]
-    }
+    let(:three_days) do
+      raw_teams_array[0..8]
+    end
 
-    let(:three_days) {
-      input[0..8]
-    }
+    let(:four_days) do
+      raw_teams_array[0..11]
+    end
 
-    let(:four_days) {
-      input[0..11]
-    }
+    describe "#teams" do
+      it "returns an array of all the teams" do
+        expected_array = expected_teams.map { |team_name| have_attributes(name: team_name) }
+        expect(season.call(raw_teams_array).teams).to contain_exactly(*expected_array)
+      end
+    end
 
-    subject {
-      ->(input) {
-        games = input.map { |v| Topteam::Game.parse_game(v) }
-        season = Topteam::Season.new(games)
-        season.process_games
-        season.rankings
+    describe "#teams_hash" do
+      it "returns a hash of teams with the team names as keys" do
+        expected_hash = expected_teams.each_with_object({}) { |team, hash| hash[team] = have_attributes(name: team) }
+        expect(season.call(raw_teams_array).teams_hash).to match(expected_hash)
+      end
+    end
+
+    describe "#process_games" do
+      let(:initialize_season) {
+        lambda { |input|
+          games = input.map { |v| Topteam::Game.parse_game(v) }
+          Topteam::Season.new(games).process_games
+        }
       }
-    }
-
-    describe "#add_game" do
-      xit "parses a game string into a game object" do
-        subject.add_game(input[0])
-        expect(subject.games).to be_an_instance_of(Topteam::Game)
+      describe "one day" do
+        subject(:teams_after_one_day) {
+          initialize_season.call(one_day).teams_tuples
+        }
+        it "increments the correct teams' scores" do
+          expect(teams_after_one_day).to contain_exactly(
+                                           ["San Jose Earthquakes", 1], ["Santa Cruz Slugs", 1], ["Capitola Seahorses", 3], ["Aptos FC", 0], ["Felton Lumberjacks", 3], ["Monterey United", 0]
+                                         )
+        end
       end
-      it "produces the proper rankings after one day" do
-        expect(subject.(one_day)).to eq ""
+      describe "two days" do
+        subject(:teams_after_two_days) {
+          initialize_season.call(two_days).teams_tuples
+        }
+        it "increments the correct teams' scores" do
+          expect(teams_after_two_days).to contain_exactly(
+                                           ["San Jose Earthquakes", 1], ["Santa Cruz Slugs", 2], ["Capitola Seahorses", 4], ["Aptos FC", 3], ["Felton Lumberjacks", 3], ["Monterey United", 3]
+                                         )
+        end
       end
-      it "produces the proper rankings after two days" do
-        expect(subject.(two_days)).to eq ""
+      describe "final scores" do
+        subject(:teams_after_four_days) {
+          initialize_season.call(raw_teams_array).teams_tuples
+        }
+        it "increments the correct teams' scores" do
+          expect(teams_after_four_days).to contain_exactly(
+                                            ["San Jose Earthquakes", 2], ["Santa Cruz Slugs", 3], ["Capitola Seahorses", 5], ["Aptos FC", 9], ["Felton Lumberjacks", 7], ["Monterey United", 6]
+                                          )
+        end
       end
     end
   end
+
+  describe "#add_game" do
+    xit "parses a game string into a game object" do
+      subject.add_game(input[0])
+      expect(subject.games).to be_an_instance_of(Topteam::Game)
+    end
+    it "produces the proper rankings after one day" do
+      expect(subject.call(one_day)).to eq ""
+    end
+    it "produces the proper rankings after two days" do
+      expect(subject.call(two_days)).to eq ""
+    end
+  end
 end
+
