@@ -3,7 +3,6 @@
 require_relative "topteam/version"
 
 module Topteam
-
   # Simple struct for keeping track of team name/score tuples
   TeamScore = Struct.new(:name, :score)
 
@@ -92,7 +91,7 @@ module Topteam
     attr_reader :teams, :games
     attr_accessor :matches_per_day
 
-    def initialize(games = [])
+    def initialize
       @teams = []
       @games = []
       @rankings = []
@@ -107,7 +106,6 @@ module Topteam
     end
 
     def add_games(games)
-
       games.each_with_index do |game_string, idx|
         game = Topteam::Game.parse_game(game_string)
 

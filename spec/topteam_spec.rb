@@ -176,7 +176,8 @@ RSpec.describe Topteam do
         it "yields the correct rankings four times" do
           expect do |b|
             season.add_games(raw_teams_array, &b)
-          end.to yield_successive_args([day_1_rankings, 1], [day_2_rankings, 2], [day_3_rankings, 3], [day_4_rankings, 4])
+          end.to yield_successive_args([day_1_rankings, 1], [day_2_rankings, 2], [day_3_rankings, 3],
+                                       [day_4_rankings, 4])
         end
       end
     end
