@@ -135,9 +135,11 @@ RSpec.describe Topteam do
           expect(season).to receive(:matches_per_day=).with(3).and_call_original
         end
         let(:day_1_rankings) do
-          [have_attributes(name: "Capitola Seahorses", score: 3),
-           have_attributes(name: "Felton Lumberjacks", score: 3),
-           have_attributes(name: "San Jose Earthquakes", score: 1)]
+          [
+            have_attributes(name: "Capitola Seahorses", score: 3),
+            have_attributes(name: "Felton Lumberjacks", score: 3),
+            have_attributes(name: "San Jose Earthquakes", score: 1)
+          ]
         end
         let(:day_2_rankings) do
           [
