@@ -96,7 +96,6 @@ module Topteam
       @teams = []
       @games = []
       @rankings = []
-      add_games(games)
     end
 
     # add teams to season if not already present

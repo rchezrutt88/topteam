@@ -73,7 +73,9 @@ RSpec.describe Topteam do
   describe Topteam::Season do
     let(:initialize_season) do
       lambda { |input|
-        Topteam::Season.new(input)
+        Topteam::Season.new.tap do |season|
+          season.add_games(input)
+        end
       }
     end
 
