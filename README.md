@@ -73,4 +73,4 @@ Please email your sponsor at Jane if you have any questions.
 
 1. `bundle install`.
 2. Run tests with `rspec`.
-3. Pipe input to the script with `cat sample_input.txt | bin/main.rb`.
+3. Pipe input to the script with `cat sample_input.txt | ruby ./bin/main.rb`.
