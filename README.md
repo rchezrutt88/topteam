@@ -64,3 +64,13 @@ for objective-c solutions) Please use platform-agnostic constructs where
 possible (line-endings and file-path-separators are two problematic areas).
 
 Please email your sponsor at Jane if you have any questions.
+
+## The solution
+
+...is a simple ruby script at `lib/main.rb` that reads from stdin. It expects input of the form provided in `sample-input.txt` and outputs rankings to stdout in the form specified in `expected-output.txt`.
+
+### Setup
+
+1. `bundle install`.
+2. Run tests with `rspec`.
+3. Pipe input to the script with `cat sample_input.txt | bin/main.rb`.
